@@ -4,7 +4,7 @@ import csv
 import re
 import datetime
 
-# I developed a class user to manage everything related to username and password
+# I developed a class Account to manage everything related to username and password
 
 class Account:
     def __init__(self, username, password):
@@ -39,6 +39,8 @@ def main():
     while True:
         manage_user_action(user_account)
 
+# Functions related to menus and navigation
+
 # manage_start_option() is the starter function of the program. It promps the user with some options, and depending on the user's choice, it does something different.
 # If the user enters '1' or '2', it returns the input, and if the user enters '3', it exits the program. However, it promps the user again in any other case.
 
@@ -64,6 +66,66 @@ def choose_start_option(option):
     else:
         return register_user()
 
+# manage_user_action(account) prompts the user with a variety of options (when it has logged in), including creating a topic to discuss, commenting on a topic, logging out and exiting from the system
+        
+def manage_user_action(account):
+    print(f"Welcome to the system, {account.username}!")
+    while True:
+        option = input("Choose among the following options:\n1 --> Explore and comment on a topic of your choice\n2 --> Create a new topic to discuss\n3 --> Log out (to switch to another account)\n4 --> Exit from the system\nOption: ").strip()
+        match option:
+            case '1' | '2' | '3':
+                return choose_user_action(account, option)
+            case '4':
+                os.system("cls")
+                sys.exit(f"Have a nice day, {account.username}!")
+            case _:
+                os.system("cls")
+                print("Please, enter a valid argument (1, 2, 3 or 4)")
+
+# choose_user_action(account, option) calls a different function depending on the user's choice
+
+def choose_user_action(account, option):
+    if option == '1':
+        return comment_topic(account)
+    elif option == '2':
+        return create_topic(account)
+    os.system("cls")
+    os.remove('last_user.csv')
+    choose_start_option(manage_start_option())
+
+# Functions related to register an acconut and login into the system, among checking different things
+
+# register_user() asks the user for a username and a password to create a new account in users.csv.
+# Then it validates the password entered and checks that the username has not been taken already (if there is another user with the same usename).
+# It that action raises an error (because the file does not exists, then another function creates it and tries again).
+# If the username is valid, then the account is added to the file users.csv
+
+def register_user():
+    new_account = Account(input("Choose a username: "), input("Choose a password: "))
+    validate_password_re(new_account)
+    while True:
+        try:
+            check_username_in_users(new_account)
+            os.system("cls")
+            return choose_start_option(manage_start_option())
+        except FileNotFoundError:
+            create_users_file()
+
+# check_username_in_users(account) checks that there is no account that has the same name that the user entered.
+# If there is, prompts the user again, otherwise it will add the account to the file.
+
+def check_username_in_users(account):
+    users = search_users()
+    while True:
+        os.system("cls")
+        validate_username_re(account)
+        if account.username in users:
+            os.system("cls")
+            account.username = input("That username is already taken. Please enter another one: ")
+        else:
+            create_account(account)
+            return
+
 # login_user() first checks that there are any users created, and if there are it continues to ask for the user for their username and password.
 # Then, it checks that the user's username is part of a created account (in users.csv) to finaly validate the password that the user entered (if it is correct, it returns the account)
 
@@ -83,7 +145,6 @@ def login_user():
         os.system("cls")
         print("Error: There are no accounts created yet")
         return choose_start_option(manage_start_option())
-
 
 # return_correct_password(account) searches for the user's entered username in users.csv, and when it founds it, returns the password associated to it.
 
@@ -114,22 +175,6 @@ def try_password_again(account):
     create_last_user_file(account)
     return account
 
-# register_user() asks the user for a username and a password to create a new account in users.csv.
-# Then it validates the password entered and checks that the username has not been taken already (if there is another user with the same usename).
-# It that action raises an error (because the file does not exists, then another function creates it and tries again).
-# If the username is valid, then the account is added to the file users.csv
-
-def register_user():
-    new_account = Account(input("Choose a username: "), input("Choose a password: "))
-    validate_password_re(new_account)
-    while True:
-        try:
-            check_username_in_users(new_account)
-            os.system("cls")
-            return choose_start_option(manage_start_option())
-        except FileNotFoundError:
-            create_users_file()
-
 # search_users() returns a list with all of the usernames saved in users.csv
 
 def search_users():
@@ -140,21 +185,6 @@ def search_users():
             users.append(row["username"])
         return users
 
-# check_username_in_users(account) checks that there is no account that has the same name that the user entered.
-# If there is, prompts the user again, otherwise it will add the account to the file.
-
-def check_username_in_users(account):
-    users = search_users()
-    while True:
-        os.system("cls")
-        validate_username_re(account)
-        if account.username in users:
-            os.system("cls")
-            account.username = input("That username is already taken. Please enter another one: ")
-        else:
-            create_account(account)
-            return
-
 # create_account(account) adds an account to the users.csv file
 
 def create_account(account):
@@ -162,15 +192,6 @@ def create_account(account):
         headers = ["username", "password"]
         writer = csv.DictWriter(file, fieldnames = headers)
         writer.writerow({"username": account.username, "password": account.password})
-
-# If the file "users.csv" does not exists, this function creates it with the fieldnames "username" and "password"
-
-def create_users_file():
-    with open("users.csv", 'w', newline="") as file:
-        headers = ["username", "password"]
-        writer = csv.DictWriter(file, fieldnames = headers)
-        writer.writeheader()
-        print("Account created successfully!")
 
 # Functions related to saving the user account
 
@@ -190,42 +211,6 @@ def get_last_user():
         for row in reader:
             account = Account(row["username"], row["password"])
         return account
-
-# create_last_user_file(account) creates a file called "last_user.csv", which stores the last user that logged in the system with the fieldnames "username" and "password"
-
-def create_last_user_file(account):
-    with open("last_user.csv", 'w', newline='') as file:
-        headers = ["username", "password"]
-        writer = csv.DictWriter(file, fieldnames = headers)
-        writer.writeheader()
-        writer.writerow({"username": account.username, "password": account.password})
-
-#manage_user_action(account) prompts the user with a variety of options (when it has logged in), including creating a topic to discuss, commenting on a topic, logging out and exiting from the system
-        
-def manage_user_action(account):
-    print(f"Welcome to the system, {account.username}!")
-    while True:
-        option = input("Choose among the following options:\n1 --> Explore and comment on a topic of your choice\n2 --> Create a new topic to discuss\n3 --> Log out (to switch to another account)\n4 --> Exit from the system\nOption: ").strip()
-        match option:
-            case '1' | '2' | '3':
-                return choose_user_action(account, option)
-            case '4':
-                os.system("cls")
-                sys.exit(f"Have a nice day, {account.username}!")
-            case _:
-                os.system("cls")
-                print("Please, enter a valid argument (1, 2, 3 or 4)")
-
-# choose_user_action(account, option) calls a different function depending on the user's choice
-
-def choose_user_action(account, option):
-    if option == '1':
-        return comment_topic(account)
-    elif option == '2':
-        return create_topic(account)
-    os.system("cls")
-    os.remove('last_user.csv')
-    choose_start_option(manage_start_option())
 
 # create_topic(account) creates a topic with a name entered by the user (he cannot have two topics with the same name), saving it with the actual date.
 # If topics.csv does not exist, call another function to create it.
@@ -263,14 +248,6 @@ def check_topic_name_by_user(account, topic):
             if row["username"] == account.username and row["topic"] == topic:
                 return True
         return False
-
-# create_topics_file() creates the file "topics.csv" in case it does not exists in the system
-
-def create_topics_file():
-    with open("topics.csv", 'w', newline='') as file:
-        headers = ["username", "topic", "date"]
-        writer = csv.DictWriter(file, fieldnames=headers)
-        writer.writeheader()
 
 def comment_topic(account):
     try:
@@ -319,14 +296,6 @@ def manage_comment_input(account, topic):
     else:
         save_comment(account, topic, text)
 
-# create_comments_file() create the file "comments.csv" in case it does not exist in the system
-
-def create_comments_file():
-    with open("comments.csv", 'w', newline='') as file:
-        headers = ["username", "topic", "comment", "date"]
-        writer = csv.DictWriter(file, fieldnames=headers)
-        writer.writeheader()
-
 # get_topics() returns a list with all the elements stored in topics.csv
 
 def get_topics():
@@ -371,6 +340,52 @@ def save_comment(account, topic, comment):
         headers = ["username", "topic", "comment", "date"]
         writer = csv.DictWriter(file, fieldnames=headers)
         writer.writerow({"username": account.username, "topic": topic, "comment": comment, "date": datetime.date.today()})
+
+
+
+# Functions that create different files in the system
+
+# create_users_file() creates the file "users.csv" with the fieldnames "username" and "password", if it does not exists in the system.
+# This file stores the accounts registered in the system
+
+def create_users_file():
+    with open("users.csv", 'w', newline="") as file:
+        headers = ["username", "password"]
+        writer = csv.DictWriter(file, fieldnames = headers)
+        writer.writeheader()
+        print("Account created successfully!")
+
+# create_last_user_file(account) creates a file called "last_user.csv", which stores the last user that logged in the system with the fieldnames "username" and "password"
+# This file stores the last user that logged in the system
+
+def create_last_user_file(account):
+    with open("last_user.csv", 'w', newline='') as file:
+        headers = ["username", "password"]
+        writer = csv.DictWriter(file, fieldnames = headers)
+        writer.writeheader()
+        writer.writerow({"username": account.username, "password": account.password})
+
+# create_topics_file() creates the file "topics.csv" with the fieldnames "username", "topic" and "date", in case it does not exists in the system
+# This file stores the topics created in the system
+
+def create_topics_file():
+    with open("topics.csv", 'w', newline='') as file:
+        headers = ["username", "topic", "date"]
+        writer = csv.DictWriter(file, fieldnames=headers)
+        writer.writeheader()
+
+# create_comments_file() create the file "comments.csv" with the fieldnames "username", "topic", "comment" and "date", in case it does not exist in the system
+# This file stores the comments related to topics in the system
+
+def create_comments_file():
+    with open("comments.csv", 'w', newline='') as file:
+        headers = ["username", "topic", "comment", "date"]
+        writer = csv.DictWriter(file, fieldnames=headers)
+        writer.writeheader()
+
+
+
+# Functions that validate different inputs
 
 # validate_password_re(account) validates the password given by the user, which must contain at least 6 characters and cannot include quotation marks nor spaces.
 # If the pasword is incorrect, the function prompts the user again.
