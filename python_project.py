@@ -37,7 +37,8 @@ def main():
     os.system("cls")
     user_account = automatic_login()
     while True:
-        user_account = manage_user_action(user_account)
+        user_account = get_last_user()
+        manage_user_action(user_account)
 
 
 
@@ -88,14 +89,13 @@ def manage_user_action(account):
 
 def choose_user_action(account, option):
     if option == '1':
-        comment_topic(account)
-        return account
+        return comment_topic(account)
     elif option == '2':
-        create_topic(account)
-        return account
-    os.system("cls")
-    os.remove('last_user.csv')
-    return choose_start_option(manage_start_option())
+        return create_topic(account)
+    else:
+        os.system("cls")
+        os.remove('last_user.csv')
+        return choose_start_option(manage_start_option())
 
 
 
@@ -238,7 +238,7 @@ def create_topic(account):
             os.system("cls")
             if check_topic_name_by_user(account, topic):
                 print("Error: You have already created a topic with the exact same name")
-                return choose_user_action(manage_user_action(account))
+                return manage_user_action(account)
             save_topic(account, topic)
             print("Topic created successfully!")
             return manage_user_action(account)
@@ -273,11 +273,14 @@ def comment_topic(account):
         print("Choose one of the avaliable topics from below:\n")
         print_topics(account, topics_list)
         topic_num = manage_topic_input(account, topics_list)
-        chosen_topic = topics_list[topic_num]["topic"]
+        if topic_num == None:
+            return account
+        chosen_topic_name = topics_list[topic_num]["topic"]
+        chosen_topic_creator_username = topics_list[topic_num]["username"]
         while True:
             try:
-                print_comments(account, get_comments(chosen_topic))
-                return manage_comment_input(account, chosen_topic)
+                print_comments(account, get_comments(chosen_topic_name, chosen_topic_creator_username))
+                return manage_comment_input(account, chosen_topic_name, chosen_topic_creator_username)
             except FileNotFoundError:
                 create_comments_file()
     except FileNotFoundError:
@@ -321,30 +324,32 @@ def manage_topic_input(account, list):
         except ValueError:
             if n.lower() == "exit":
                 os.system("cls")
-                return manage_user_action(account)
-            print(f"Error: A integer was expected, but you entered something else (a string). Please try again below")
+                manage_user_action(account)
+                return None
+            else:
+                print("Error: A integer was expected, but you entered something else (a string). Please try again below")
 
 # manage_comment_input(account, topic) ensures that the comment entered by the user is valid, and if it is, it saves the comment in comments.csv.
 # If the users enters the word 'exit', the program prompts the action menu back and does not saves anything.
 
-def manage_comment_input(account, topic):
+def manage_comment_input(account, topic, username):
     text = input("What are your thoughts on this topic? (type 'exit' (without the quotation marks) if you want to fo back)\n").strip()
     os.system("cls")
     text = validate_comment(text)
     os.system("cls")
     if text.lower() == "exit":
-        manage_user_action(account)
+        return manage_user_action(account)
     else:
-        save_comment(account, topic, text)
+        save_comment(account, topic, username, text)
         
 # get_comments(topic) returns a list with all the comments made in a specified topic (saved in comments.csv).
 
-def get_comments(topic):
+def get_comments(topic, username):
     with open("comments.csv", 'r') as file:
         reader = csv.DictReader(file)
         topic_comments = []
         for row in reader:
-            if topic == row["topic"]:
+            if topic == row["topic"] and username == row["creator_username"]:
                 topic_comments.append({"username": row["username"], "comment": row["comment"], "date": row["date"]})
         return topic_comments
 
@@ -361,11 +366,11 @@ def print_comments(account, list):
 
 # save_comment(account, topic, comment) saves a comment made by an user specifying its username, the topic name, the content of the comment and the actual date.
 
-def save_comment(account, topic, comment):
+def save_comment(account, topic, username, comment):
     with open("comments.csv", 'a', newline="") as file:
-        headers = ["username", "topic", "comment", "date"]
+        headers = ["username", "topic", "creator_username", "comment", "date"]
         writer = csv.DictWriter(file, fieldnames=headers)
-        writer.writerow({"username": account.username, "topic": topic, "comment": comment, "date": datetime.date.today()})
+        writer.writerow({"username": account.username, "topic": topic, "creator_username": username, "comment": comment, "date": datetime.date.today()})
 
 
 
@@ -400,12 +405,12 @@ def create_topics_file():
         writer = csv.DictWriter(file, fieldnames=headers)
         writer.writeheader()
 
-# create_comments_file() create the file "comments.csv" with the fieldnames "username", "topic", "comment" and "date", in case it does not exist in the system
+# create_comments_file() create the file "comments.csv" with the fieldnames "username", "topic", "creator_username", "comment" and "date", in case it does not exist in the system
 # This file stores the comments related to topics in the system.
 
 def create_comments_file():
     with open("comments.csv", 'w', newline='') as file:
-        headers = ["username", "topic", "comment", "date"]
+        headers = ["username", "topic", "creator_username", "comment", "date"]
         writer = csv.DictWriter(file, fieldnames=headers)
         writer.writeheader()
 
