@@ -130,24 +130,6 @@ def register_user():
         except FileNotFoundError:
             create_users_file()
 
-# validate_password_re(account) validates the password given by the user, which must contain at least 6 characters and cannot include quotation marks nor spaces.
-# If the pasword is incorrect, the function prompts the user again.
-
-def validate_password_re(account):
-    while not re.search(r"^([^\s\'\"]{6,})$", account.password):
-        os.system("cls")
-        print ("Invalid password\nIt must contain at least 6 characters (which cannot include quotation marks nor spaces)")
-        account.password = input("Please enter another password: ")
-
-# validate_username_re(account) validates the username given by the user, which must contain between 4 and 15 characters (only letters, numbers and underscores)
-# If the username is incorrect, the function prompts the user again.
-
-def validate_username_re(account):
-    while not re.search(r"^([\w]{4,15})$", account.username):
-        os.system("cls")
-        print ("Invalid username\nIt must contain between 4 and 15 characters (which can only be letters, numbers and underscores)")
-        account.username = input("Please enter another username: ")
-
 # search_users() returns a list with all of the usernames saved in users.csv
 
 def search_users():
@@ -264,13 +246,6 @@ def create_topic(account):
         except FileNotFoundError:
             create_topics_file()
 
-def validate_topic_name(topic):
-    while not re.search(r"^(.{10,50})$", topic):
-        os.system("cls")
-        print ("Error: Invalid topic name\nIt must contain between 10 and 50 characters")
-        topic = input("Please enter another topic name: ").strip()
-    return topic
-
 # save_topic(account, topic) saves the topic in topics.csv with the username, topic's name and actual date.
     
 def save_topic(account, topic):
@@ -316,13 +291,6 @@ def comment_topic(account):
         print("Error: There are no topics in the system yet")
         return manage_user_action(account)
 
-def validate_comment(comment):
-    while not re.search(r"^(.{1,150})$", comment):
-        os.system("cls")
-        print ("Invalid comment\nIt must contain between 1 and 150 characters")
-        comment = input("Please enter another comment (type 'exit' (without the quotation marks) if you want to fo back)\n").strip()
-    return comment
-
 
 def manage_topic_input(account, list):
     while True:
@@ -333,7 +301,7 @@ def manage_topic_input(account, list):
                 os.system("cls")
                 return n
             else:
-                print(f"Error: The topic you specified does not exist (there is not a topic {n}). Please try again below")
+                print(f"Error: The topic you specified does not exist (there is not a topic {n+1}). Please try again below")
         except ValueError:
             if n.lower() == "exit":
                 os.system("cls")
@@ -345,11 +313,11 @@ def manage_comment_input(account, topic):
     text = input("What are your thoughts on this topic? (type 'exit' (without the quotation marks) if you want to fo back)\n").strip()
     os.system("cls")
     text = validate_comment(text)
+    os.system("cls")
     if text.lower() == "exit":
         manage_user_action(account)
     else:
         save_comment(account, topic, text)
-
 
 # create_comments_file() create the file "comments.csv" in case it does not exist in the system
 
@@ -373,7 +341,7 @@ def get_topics():
 
 def print_topics(account, list):
     if len(list) > 0:
-        for count, item in enumerate(reversed(list)):
+        for count, item in enumerate(list):
             print(f"{count+1} - {item["topic"]}\nCreated by {item["username"]}, on {item["date"]}\n")
     else:
         print("Error: There are no topics created in the system yet")
@@ -403,6 +371,44 @@ def save_comment(account, topic, comment):
         headers = ["username", "topic", "comment", "date"]
         writer = csv.DictWriter(file, fieldnames=headers)
         writer.writerow({"username": account.username, "topic": topic, "comment": comment, "date": datetime.date.today()})
+
+# validate_password_re(account) validates the password given by the user, which must contain at least 6 characters and cannot include quotation marks nor spaces.
+# If the pasword is incorrect, the function prompts the user again.
+
+def validate_password_re(account):
+    while not re.search(r"^([^\s\'\"]{6,})$", account.password):
+        os.system("cls")
+        print ("Invalid password\nIt must contain at least 6 characters (which cannot include quotation marks nor spaces)")
+        account.password = input("Please enter another password: ")
+
+# validate_username_re(account) validates the username given by the user, which must contain between 4 and 15 characters (only letters, numbers and underscores)
+# If the username is incorrect, the function prompts the user again.
+
+def validate_username_re(account):
+    while not re.search(r"^([\w]{4,15})$", account.username):
+        os.system("cls")
+        print ("Invalid username\nIt must contain between 4 and 15 characters (which can only be letters, numbers and underscores)")
+        account.username = input("Please enter another username: ")
+
+# validate_topic_name(topic) validates the name entered to create a topic in the system, which must contain between 10 and 50 characters.
+# If the topic name is incorrect, the function prompts the user again
+
+def validate_topic_name(topic):
+    while not re.search(r"^(.{10,50})$", topic):
+        os.system("cls")
+        print ("Error: Invalid topic name\nIt must contain between 10 and 50 characters")
+        topic = input("Please enter another topic name: ").strip()
+    return topic
+
+# validate_comment(comment) validates the comment entered to create a comment related to a topic in the system, which must contain between 1 and 150 characters.
+# If the comment is incorrect, the function prompts the user again
+
+def validate_comment(comment):
+    while not re.search(r"^(.{1,150})$", comment):
+        os.system("cls")
+        print ("Invalid comment\nIt must contain between 1 and 150 characters")
+        comment = input("Please enter another comment (type 'exit' (without the quotation marks) if you want to fo back)\n").strip()
+    return comment
 
 if __name__ == "__main__":
     main()
