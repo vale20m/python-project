@@ -37,7 +37,7 @@ def main():
     os.system("cls")
     user_account = automatic_login()
     while True:
-        manage_user_action(user_account)
+        user_account = manage_user_action(user_account)
 
 # Functions related to menus and navigation
 
@@ -86,12 +86,14 @@ def manage_user_action(account):
 
 def choose_user_action(account, option):
     if option == '1':
-        return comment_topic(account)
+        comment_topic(account)
+        return account
     elif option == '2':
-        return create_topic(account)
+        create_topic(account)
+        return account
     os.system("cls")
     os.remove('last_user.csv')
-    choose_start_option(manage_start_option())
+    return choose_start_option(manage_start_option())
 
 # Functions related to register an acconut and login into the system, among checking different things
 
