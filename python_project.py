@@ -108,7 +108,7 @@ def choose_user_action(account, option):
 
 def register_user():
     new_account = Account(input("Choose a username: "), input("Choose a password: "))
-    validate_password_re(new_account)
+    retry_password(new_account)
     while True:
         try:
             check_username_in_users(new_account)
@@ -124,7 +124,7 @@ def check_username_in_users(account):
     users = search_users()
     while True:
         os.system("cls")
-        validate_username_re(account)
+        retry_username(account)
         if account.username in users:
             os.system("cls")
             account.username = input("That username is already taken. Please enter another one: ")
@@ -232,7 +232,7 @@ def return_correct_password(account):
 def create_topic(account):
     os.system("cls")
     topic = input("Enter a name for your topic: ").strip()
-    topic = validate_topic_name(topic)
+    topic = retry_topic_name(topic)
     while True:
         try:
             os.system("cls")
@@ -335,7 +335,7 @@ def manage_topic_input(account, list):
 def manage_comment_input(account, topic, username):
     text = input("What are your thoughts on this topic? (type 'exit' (without the quotation marks) if you want to fo back)\n").strip()
     os.system("cls")
-    text = validate_comment(text)
+    text = retry_comment(text)
     os.system("cls")
     if text.lower() == "exit":
         return manage_user_action(account)
@@ -418,39 +418,51 @@ def create_comments_file():
 
 # Functions that validate different inputs
 
-# validate_password_re(account) validates the password given by the user, which must contain at least 6 characters and cannot include quotation marks nor spaces.
+# retry_password(account) validates the password given by the user, which must contain at least 6 characters and cannot include quotation marks nor spaces.
 # If the pasword is incorrect, the function prompts the user again.
 
 def validate_password_re(account):
-    while not re.search(r"^([^\s\'\"]{6,})$", account.password):
+    return re.search(r"^([^\s\'\"]{6,})$", account.password)
+
+def retry_password(account):
+    while not validate_password_re(account):
         os.system("cls")
         print ("Invalid password\nIt must contain at least 6 characters (which cannot include quotation marks nor spaces)")
         account.password = input("Please enter another password: ")
 
-# validate_username_re(account) validates the username given by the user, which must contain between 4 and 15 characters (only letters, numbers and underscores)
+# retry_username(account) validates the username given by the user, which must contain between 4 and 15 characters (only letters, numbers and underscores)
 # If the username is incorrect, the function prompts the user again.
 
 def validate_username_re(account):
-    while not re.search(r"^([\w]{4,15})$", account.username):
+    return re.search(r"^([\w]{4,15})$", account.username)
+
+def retry_username(account):
+    while not validate_username_re(account):
         os.system("cls")
         print ("Invalid username\nIt must contain between 4 and 15 characters (which can only be letters, numbers and underscores)")
         account.username = input("Please enter another username: ")
 
-# validate_topic_name(topic) validates the name entered to create a topic in the system, which must contain between 10 and 50 characters.
+# retry_topic_name(topic) validates the name entered to create a topic in the system, which must contain between 10 and 50 characters.
 # If the topic name is incorrect, the function prompts the user again.
 
 def validate_topic_name(topic):
-    while not re.search(r"^(.{10,50})$", topic):
+    return re.search(r"^(.{10,50})$", topic)
+
+def retry_topic_name(topic):
+    while not validate_topic_name(topic):
         os.system("cls")
         print ("Error: Invalid topic name\nIt must contain between 10 and 50 characters")
         topic = input("Please enter another topic name: ").strip()
     return topic
 
-# validate_comment(comment) validates the comment entered to create a comment related to a topic in the system, which must contain between 1 and 150 characters.
+# retry_comment(comment) validates the comment entered to create a comment related to a topic in the system, which must contain between 1 and 150 characters.
 # If the comment is incorrect, the function prompts the user again.
 
 def validate_comment(comment):
-    while not re.search(r"^(.{1,150})$", comment):
+    return re.search(r"^(.{1,150})$", comment)
+
+def retry_comment(comment):
+    while not validate_comment(comment):
         os.system("cls")
         print ("Invalid comment\nIt must contain between 1 and 150 characters")
         comment = input("Please enter another comment (type 'exit' (without the quotation marks) if you want to fo back)\n").strip()
